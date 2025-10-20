@@ -1,0 +1,11 @@
+/* Espace bouton / politique de confidentialité */
+.woocommerce-checkout .place-order .woocommerce-privacy-policy-text{margin-top:14px}
+/* Bloc garantie carte */
+#edena-card-wrap.edena-card-wrap{display:grid;grid-template-columns:1fr;gap:10px;align-items:start}
+#edena-card-wrap .edena-card-text p{margin:6px 0 0}
+#edena-card-element{box-sizing:border-box;width:100%;min-height:48px;padding:12px 14px;border:1px solid #e5e7eb;border-radius:6px;background:#fff;transition:border-color .15s ease,box-shadow .15s ease;position:relative;z-index:2}
+#edena-card-element .StripeElement,#edena-card-element .__PrivateStripeElement{display:block!important;opacity:1!important;font-size:16px!important;line-height:1.4!important}
+#edena-card-element.is-focused{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+#edena-card-element.is-invalid{border-color:#dc2626}
+#edena-card-errors{color:#dc2626;margin-top:8px}
+#edena-card-element.is-ready .__PrivateStripeElement{opacity:1!important}
