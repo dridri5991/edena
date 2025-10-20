@@ -32,7 +32,7 @@
     var r=await fetch((window.EDENA_STRIPE_OPTS||{}).ajaxUrl,{method:'POST',credentials:'same-origin',body:fd});
     var j=await r.json();
     if(!j||!j.success) throw new Error((j&&j.data&&j.data.message)||'Attachement échoué');
-    return true;
+    return j.data||{ok:true};
   }
   function bindPlaceOrder(){
     var btn=document.getElementById('place_order');
@@ -54,6 +54,10 @@
       if(res.error){ setError(res.error.message||'Erreur d’authentification'); return; }
       var pm=res.setupIntent&&res.setupIntent.payment_method; if(!pm){ setError('Aucun moyen de paiement retourné'); return; }
       await attachPaymentMethod(pm, data.customer);
+      var inputCustomer=document.getElementById('edena_gc_customer');
+      var inputPM=document.getElementById('edena_gc_payment_method');
+      if(inputCustomer) inputCustomer.value=data.customer||'';
+      if(inputPM) inputPM.value=pm||'';
       window.__EDENA_SI_DONE__=true;
       var form=document.querySelector('form.checkout');
       if(window.jQuery&&jQuery(form).length){ jQuery(form).off('checkout_place_order'); jQuery(form).trigger('submit'); }
@@ -98,6 +102,10 @@
     var _deb=false;
     window.jQuery(document.body).on('updated_checkout', function(){
       window.__EDENA_SI_DONE__ = false;
+      var inputCustomer=document.getElementById('edena_gc_customer');
+      var inputPM=document.getElementById('edena_gc_payment_method');
+      if(inputCustomer) inputCustomer.value='';
+      if(inputPM) inputPM.value='';
       if(_deb) return; _deb=true;
       setTimeout(function(){ _deb=false; ensureCardMounted(); }, 120);
     });

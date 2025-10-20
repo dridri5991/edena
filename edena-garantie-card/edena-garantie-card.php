@@ -106,6 +106,8 @@ add_action('woocommerce_review_order_before_submit', function(){
         <p id="edena-card-errors" class="edena-card-errors" role="alert" aria-live="polite"></p>
       </div>
     </div>
+    <input type="hidden" name="edena_gc_customer" id="edena_gc_customer" value="">
+    <input type="hidden" name="edena_gc_payment_method" id="edena_gc_payment_method" value="">
 <?php }, 5);
 
 // -----------------------------
@@ -307,10 +309,24 @@ add_action('wp_ajax_edena_si_attach', 'edena_gc_ajax_attach_pm');
 add_action('wp_ajax_nopriv_edena_si_attach', 'edena_gc_ajax_attach_pm');
 function edena_gc_ajax_attach_pm(){
     check_ajax_referer('edena_gc_nonce', 'nonce');
-    $pm = sanitize_text_field($_POST['payment_method'] ?? '');
-    $customer = sanitize_text_field($_POST['customer'] ?? '');
+    $pm = isset($_POST['payment_method']) ? sanitize_text_field(wp_unslash($_POST['payment_method'])) : '';
+    $customer = isset($_POST['customer']) ? sanitize_text_field(wp_unslash($_POST['customer'])) : '';
     if (!$pm || !$customer) wp_send_json_error(['message'=>'Paramètres manquants.']);
     $res = edena_gc_stripe_request('POST', 'payment_methods/'.$pm.'/attach', [ 'customer' => $customer ]);
     if (is_wp_error($res)) wp_send_json_error(['message'=>$res->get_error_message()]);
-    wp_send_json_success(['ok'=>true]);
+    $default = edena_gc_stripe_request('POST', 'customers/'.$customer, [ 'invoice_settings[default_payment_method]' => $pm ]);
+    if (is_wp_error($default)) wp_send_json_error(['message'=>$default->get_error_message()]);
+    wp_send_json_success(['ok'=>true, 'payment_method'=>$pm, 'customer'=>$customer]);
 }
+
+add_action('woocommerce_checkout_create_order', function($order){
+    $customer = isset($_POST['edena_gc_customer']) ? sanitize_text_field(wp_unslash($_POST['edena_gc_customer'])) : '';
+    $payment_method = isset($_POST['edena_gc_payment_method']) ? sanitize_text_field(wp_unslash($_POST['edena_gc_payment_method'])) : '';
+    if (! $customer && ! $payment_method) return;
+    if ($customer) {
+        $order->update_meta_data('_edena_stripe_customer_id', $customer);
+    }
+    if ($payment_method) {
+        $order->update_meta_data('_edena_stripe_payment_method', $payment_method);
+    }
+}, 20);
